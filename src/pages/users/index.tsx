@@ -16,6 +16,7 @@ import {
 } from "@chakra-ui/react";
 import Link from "next/link";
 import { RiAddLine, RiPencilLine } from "react-icons/ri";
+import { useQuery } from "react-query";
 
 import { Header } from "../../components/Header";
 import { Pagination } from "../../components/Pagination";
@@ -23,6 +24,12 @@ import { Sidebar } from "../../components/Sidebar";
 import { useIsWideVersion } from "../../hooks/useIsWideVersion";
 
 export default function UserList() {
+  const { data, isLoading, error } = useQuery("users", async () => {
+    const res = await fetch("http://localhost:3000/api/users");
+    const data = await res.json();
+    return data;
+  });
+
   const isWideVersion = useIsWideVersion();
 
   return (
@@ -38,10 +45,9 @@ export default function UserList() {
               Usuários
             </Heading>
 
-            <Link href="/users/create" passHref>
+            <Link href="users/create" passHref>
               {isWideVersion ? (
                 <Button
-                  as="a"
                   size="sm"
                   fontSize="sm"
                   colorScheme="pink"
@@ -51,7 +57,6 @@ export default function UserList() {
                 </Button>
               ) : (
                 <IconButton
-                  as="a"
                   size="sm"
                   aria-label="create user"
                   colorScheme="pink"

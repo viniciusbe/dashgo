@@ -10,11 +10,50 @@ import {
 } from "@chakra-ui/react";
 import Link from "next/link";
 
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+
 import { Input } from "../../components/Form/Input";
 import { Header } from "../../components/Header";
 import { Sidebar } from "../../components/Sidebar";
+import { FieldPath, SubmitHandler, useForm } from "react-hook-form";
+
+interface CreateUserFormData {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
+const createUserFormSchema = yup.object().shape({
+  name: yup.string().required("Name is required"),
+  email: yup
+    .string()
+    .required("E-mail is required")
+    .email("Enter a valid e-mail"),
+  password: yup.string().min(6, "Password must have at least 6 characters"),
+  password_confirmation: yup
+    .string()
+    .oneOf([null, yup.ref("password")], "Passwords must match"),
+});
 
 export default function CreateUser() {
+  const { handleSubmit, formState, register } = useForm<CreateUserFormData>({
+    resolver: yupResolver(createUserFormSchema),
+  });
+
+  const { isSubmitting, errors } = formState;
+
+  const handleCreateUser: SubmitHandler<CreateUserFormData> = (formData) => {
+    console.log(formData);
+  };
+
+  const composeInputProps = (name: FieldPath<CreateUserFormData>) => ({
+    ...register(name),
+    name,
+    error: errors[name],
+  });
+
   return (
     <Box>
       <Header />
@@ -22,24 +61,43 @@ export default function CreateUser() {
       <Flex w="100%" my="6" maxW={1480} mx="auto" px={["6", "8"]}>
         <Sidebar />
 
-        <Box flex="1" borderRadius={8} bg="gray.800" p={["6", "8"]}>
+        <Box
+          as="form"
+          flex="1"
+          borderRadius={8}
+          bg="gray.800"
+          p={["6", "8"]}
+          onSubmit={handleSubmit(handleCreateUser)}
+        >
           <Heading size="lg" fontWeight="normal">
-            Criar usuário
+            Create user
           </Heading>
 
           <Divider my="6" borderColor="gray.700" />
 
           <VStack spacing={["6", "8"]}>
             <SimpleGrid minChildWidth="240px" spacing={["6", "8"]} w="100%">
-              <Input name="name" label="Nome completo" />
-              <Input name="email" label="E-mail" type="email" />
+              <Input
+                {...composeInputProps("name")}
+                label="Full name"
+                type="text"
+              />
+              <Input
+                {...composeInputProps("email")}
+                label="E-mail"
+                type="text"
+              />
             </SimpleGrid>
 
             <SimpleGrid minChildWidth="240px" spacing={["6", "8"]} w="100%">
-              <Input name="password" label="Senha" type="password" />
               <Input
-                name="password_confirmation"
-                label="Confirmação da senha"
+                {...composeInputProps("password")}
+                label="Password"
+                type="password"
+              />
+              <Input
+                {...composeInputProps("password_confirmation")}
+                label="Password confirmation"
                 type="password"
               />
             </SimpleGrid>
@@ -47,14 +105,14 @@ export default function CreateUser() {
 
           <Flex mt={["6", "8"]} justify="flex-end">
             <HStack spacing="4">
-              <Link href="/users" passHref>
-                <Button as="a" colorScheme="whiteAlpha">
-                  Cancelar
+              <Link href="/users">
+                <Button colorScheme="whiteAlpha" disabled={isSubmitting}>
+                  Cancel
                 </Button>
               </Link>
 
-              <Button as="a" colorScheme="pink">
-                Salvar
+              <Button type="submit" colorScheme="pink" isLoading={isSubmitting}>
+                Save
               </Button>
             </HStack>
           </Flex>
